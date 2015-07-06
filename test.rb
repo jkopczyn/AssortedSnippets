@@ -1,13 +1,43 @@
-def detour(a,b,c,d)
-  #these are the total lengths, but a<->c and b<->d are in both
-  #path1 = distance(a,c)+distance(c,d)+distance(d,b)
-  #path2 = distance(c,a)+distance(a,b)+distance(b,d)
-  #so the shorter detour distance is the shorter route distance
-  #assuming it's symmetric, which is a smaller simplification than pythagorean
-  #distance
-  [distance(a,b), distance(c,d)].min
+# Parsing an API response
+#
+# Suppose you are calling a JSON API that responds to requests using a nested
+# Hash, where the values are either other Hashes, or Strings, with no other
+# possible options.
+#
+# Given a sequence of keys, write a method that traverses the Hash to return
+# the String stored at the terminal key in the sequence.
+def parse(hash, keys)
+  dict = hash
+  keys.each do |key|
+    if dict.include?(key)
+      dict = dict[key]
+    else
+      return nil
+    end
+  end
+  if dict.is_a?(String)
+    return dict
+  else
+    return nil
+  end
 end
 
-def distance(a,b)
-  ((a[0]-b[0])**2 + (a[1]-b[1])**2)**(0.5)
+input = {
+  k1: "v1",
+  k2: {
+    k21: "v21",
+    k22: {
+      k221: "v221"
+    }
+  },
+  k3: {
+    k31: "v31"
+  }
+}
+
+
+if (output = parse(input, [:k2, :k22, :k221]) == "v221")
+  puts "Success!"
+else
+  puts "Output #{output.inspect} did not match 'v221'"
 end
