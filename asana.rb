@@ -1,5 +1,3 @@
-#test
-
 def integer_division(product, divisor)
   quotient = 0
   factor = divisor
@@ -28,7 +26,6 @@ def pow2(exponent)
   i
 end
 
-
 class Tag
   def initialize(name, contents, options)
     @name = name
@@ -56,4 +53,17 @@ class Tag
   end
 end
 
-
+def order_dependencies(root, dependency_list)
+  queue = Set.new(root)
+  priority_hash = {root => 0}
+  until queue.empty?
+    file = queue.shift
+    dependency_list[file].each do |dependency|
+      unless priority_hash[dependency] and priority_hash[dependency] > priority_hash[file]
+        priority_hash[dependency] = priority_hash[file]+1
+        queue.push(dependency)
+      end
+    end
+  end
+  priority_hash.keys.sort {|key| priority_hash[key] }.reverse
+end
