@@ -63,15 +63,17 @@ class Trie
 end
 
 class TrieNode
-  attr_accessor :word_present, :concat_present, :prefix, :children
+  attr_accessor :word_present, :concat_present, :prefix, :children, :parent, :trie
 
   def initialize(options)
+    @parent = options[:parent]
     @trie = options[:trie]
+    @trie = @parent.trie if @parent
     @prefix = options[:prefix]
     @prefix ||= ""
     @word_present = options[:word_present]
     @word_present ||= false
-    @concat_present = options[:concat_present] or false
+    @concat_present = options[:concat_present]
     @concat_present ||= false
     @children = {}
   end
@@ -101,7 +103,7 @@ class TrieNode
         #nothing
       elsif extend_tree
         children[next_char] = TrieNode.new(
-          prefix: "#{prefix}#{next_char}", trie: @trie)
+          prefix: "#{prefix}#{next_char}", parent: self)
       else
         return nil
       end
@@ -121,6 +123,6 @@ File.open("wordsforproblem.txt") do |file|
   trie = Trie.new
   trie.import_words(file.lazy.map(&:strip))
   #trie.import_words(file.map(&:strip))
-  trie.generate_concatenations
+  #trie.generate_concatenations
   trie.output_matches
 end
