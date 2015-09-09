@@ -38,21 +38,25 @@ class Trie
     }
   end
 
-  def generate_concatenations
+  def find_concatenations
+    @both_nodes = []
     words = @word_nodes.keys.sort {|x, y| x.length <=> y.length }
-    queue = words.dup
+    queue = @word_nodes.to_a.sort {|x, y| y[0].length <=> x[0].length }
     until queue.empty?
-      string = queue.shift
-      puts string
-      node = @word_nodes[string]
-      words.each do |word|
-        cand = "#{string}#{word}"
-        if (!valid_concatenation?(cand)) and node.add_concatenation(cand)
-          queue << cand
-          @both_nodes << cand if valid_word?(cand)
+      string, node = queue.shift
+      #      puts string
+      words.select {|word| word.length < string.length }.each do |word|
+        chunk = string[-word.length..-1]
+        if chunk == word
+          if valid_word?(chunk)
+            @both_nodes << node
+          else
+            queue << [string[0...-word.length], node]
+          end
         end
       end
     end
+    @both_nodes.sort! {|x, y| x.prefix.length <=> y.prefix.length }
   end
 
   def output_matches
@@ -114,6 +118,17 @@ class TrieNode
     end
   end
 
+  def find_parent(string)
+    if string.length > prefix.length or string != prefix[-string.length..-1]
+      throw "Bad Search Path, string #{string} is not a parent of #{prefix}"
+    else
+      node = self
+      string.length.times { node = node.parent }
+      return node
+    end
+  end
+
+
   def to_s
     "prefix, [#{children}]"
   end
@@ -124,5 +139,6 @@ File.open("wordsforproblem.txt") do |file|
   trie.import_words(file.lazy.map(&:strip))
   #trie.import_words(file.map(&:strip))
   #trie.generate_concatenations
+  trie.find_concatenations
   trie.output_matches
 end
