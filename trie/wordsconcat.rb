@@ -23,13 +23,13 @@ class Trie
   end
 
   def mark_concatenation(node)
-    @concat_nodes[node.prefix] ||= node
     node.concat_present = true
+    @concat_nodes[node.prefix] ||= node
   end
 
   def mark_word(node)
-    @word_nodes[node.prefix] ||= node
     node.word_present = true
+    @word_nodes[node.prefix] ||= node
   end
 
   def import_words(word_list)
@@ -37,13 +37,25 @@ class Trie
   end
 
   def generate_concatenations
-    words = @word_nodes.keys
+    words = @word_nodes.keys.sort {|x, y| x.length <=> y.length }
     queue = words.dup
     until queue.empty?
+      string = queue.shift
+      node = @word_nodes[string]
+      words.each do |word|
+        cand = "#{string}#{word}"
+        if not valid_concatenation(cand) and node.add_concatenation(cand)
+          queue << cand
+          @both_nodes << cand if valid_word?(cand)
+        end
+      end
     end
   end
 
   def output_matches
+    puts @both_nodes[-1]
+    puts @both_nodes[-2]
+    puts @both_nodes.length
   end
 end
 
@@ -77,12 +89,12 @@ class TrieNode
         children[next_char] = TrieNode.new(
           prefix: "#{prefix}#{next_char}", trie: @trie)
       else
-        return false
+        return nil
       end
       children[next_char].add_into_tree(string, &block)
     else #string and prefix are the same
       block.call(self)
-      return true
+      #return value is the node
     end
   end
 
