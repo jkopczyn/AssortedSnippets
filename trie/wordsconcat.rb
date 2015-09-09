@@ -7,11 +7,11 @@ class Trie
   end
 
   def add_word(word)
-    @root.add_word
+    @root.add_word(word)
   end
 
   def add_concatenation(full_string)
-    @root.add_concatenation
+    @root.add_concatenation(full_string)
   end
 
   def valid_word?(word)
@@ -33,7 +33,9 @@ class Trie
   end
 
   def import_words(word_list)
-    word_list.each { |word| add_word(word) }
+    word_list.each { |word| 
+      add_word(word) 
+    }
   end
 
   def generate_concatenations
@@ -41,10 +43,11 @@ class Trie
     queue = words.dup
     until queue.empty?
       string = queue.shift
+      puts string
       node = @word_nodes[string]
       words.each do |word|
         cand = "#{string}#{word}"
-        if not valid_concatenation(cand) and node.add_concatenation(cand)
+        if (!valid_concatenation?(cand)) and node.add_concatenation(cand)
           queue << cand
           @both_nodes << cand if valid_word?(cand)
         end
@@ -64,24 +67,35 @@ class TrieNode
 
   def initialize(options)
     @trie = options[:trie]
-    @prefix = options[:prefix] or ""
-    @word_present = options[:word_present] or false
+    @prefix = options[:prefix]
+    @prefix ||= ""
+    @word_present = options[:word_present]
+    @word_present ||= false
     @concat_present = options[:concat_present] or false
+    @concat_present ||= false
     @children = {}
   end
 
+  def mark_word(word)
+    @trie.mark_word(word)
+  end
+
+  def mark_concatenation(full_string)
+    @trie.mark_concatenation(full_string)
+  end
+
   def add_word(word)
-    add_into_tree(word) { |node| node.trie.mark_word(node) }
+    add_into_tree(word, true) { |node| mark_word(node) }
   end
 
   def add_concatenation(full_string)
-    add_into_tree(full_string, false) { |node| node.trie.mark_concatenation(node) }
+    add_into_tree(full_string, false) { |node| mark_concatenation(node) }
   end
 
   def add_into_tree(string, extend_tree=true, &block)
-    if string.length < prefix.length or string[0...prefix.length] != prefix:
+    if string.length < prefix.length or string[0...prefix.length] != prefix
       throw "Bad Search Path, prefix #{prefix} and string #{string}"
-    elsif string.length > prefix.length:
+    elsif string.length > prefix.length
       next_char = string[prefix.length]
       if children[next_char]
         #nothing
@@ -106,6 +120,7 @@ end
 File.open("wordsforproblem.txt") do |file|
   trie = Trie.new
   trie.import_words(file.lazy.map(&:strip))
+  #trie.import_words(file.map(&:strip))
   trie.generate_concatenations
   trie.output_matches
 end
