@@ -1,5 +1,4 @@
 require 'set'
-require 'byebug'
 
 class Trie
   attr_accessor :word_nodes, :root, :concatenated_words
@@ -54,7 +53,7 @@ class Trie
 end
 
 class TrieNode
-  attr_accessor :word_present, :concat_present, :prefix, :children, :parent, :trie
+  attr_accessor :word_present, :prefix, :children, :parent, :trie
 
   def initialize(options)
     @parent = options[:parent]
@@ -64,8 +63,6 @@ class TrieNode
     @prefix ||= ""
     @word_present = options[:word_present]
     @word_present ||= false
-    @concat_present = options[:concat_present]
-    @concat_present ||= false
     @children = {}
   end
 
@@ -94,10 +91,6 @@ class TrieNode
       head = head.parent
     end
     ancestors
-  end
-
-  def valid_word?(word)
-    @trie.valid_word?(word)
   end
 
   def to_s
