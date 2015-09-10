@@ -1,8 +1,12 @@
+require 'set'
+
 class Trie
+  attr_accessor :word_nodes, :root, :both_nodes
+
   def initialize
     @root = TrieNode.new(trie: self)
     @word_nodes = {}
-    @concat_nodes = {}
+    #@concat_nodes = {}
     @both_nodes = []
   end
 
@@ -10,53 +14,33 @@ class Trie
     @root.add_word(word)
   end
 
-  def add_concatenation(full_string)
-    @root.add_concatenation(full_string)
-  end
-
-  def valid_word?(word)
-    !!@word_nodes[word]
-  end
-
-  def valid_concatenation?(string)
-    !!@concat_nodes[string]
-  end
-
-  def mark_concatenation(node)
-    node.concat_present = true
-    @concat_nodes[node.prefix] ||= node
-  end
-
-  def mark_word(node)
-    node.word_present = true
-    @word_nodes[node.prefix] ||= node
-  end
-
   def import_words(word_list)
-    word_list.each { |word| 
-      add_word(word) 
-    }
+    word_list.each { |word| add_word(word) }
+    puts "words imported"
   end
 
-  def find_concatenations
-    @both_nodes = []
-    words = @word_nodes.keys.sort {|x, y| x.length <=> y.length }
-    queue = @word_nodes.to_a.sort {|x, y| y[0].length <=> x[0].length }
+  def valid_word?(string)
+    !!@word_nodes[string]
+  end
+
+  def find_concat_words
+    queue = @word_nodes.to_a.sort {|x, y| x[0].length <=> y[0].length }
     until queue.empty?
-      string, node = queue.shift
-      #      puts string
-      words.select {|word| word.length < string.length }.each do |word|
-        chunk = string[-word.length..-1]
-        if chunk == word
-          if valid_word?(chunk)
-            @both_nodes << node
-          else
-            queue << [string[0...-word.length], node]
-          end
+      prefix, node = queue.shift
+      node.all_prefixes.map do |ancestor_node|
+        rest = prefix[-ancestor_node.prefix.length..-1]
+        if rest.empty? 
+          next
+        elsif valid_word?(rest)
+          @both_nodes << node
+          puts node.prefix
+          break
+        else
+          queue << [rest, node]
         end
       end
     end
-    @both_nodes.sort! {|x, y| x.prefix.length <=> y.prefix.length }
+    @both_nodes.sort! {|x,y| x.prefix.length <=> y.prefix.length }
   end
 
   def output_matches
@@ -82,23 +66,7 @@ class TrieNode
     @children = {}
   end
 
-  def mark_word(word)
-    @trie.mark_word(word)
-  end
-
-  def mark_concatenation(full_string)
-    @trie.mark_concatenation(full_string)
-  end
-
-  def add_word(word)
-    add_into_tree(word, true) { |node| mark_word(node) }
-  end
-
-  def add_concatenation(full_string)
-    add_into_tree(full_string, false) { |node| mark_concatenation(node) }
-  end
-
-  def add_into_tree(string, extend_tree=true, &block)
+  def add_word(string)
     if string.length < prefix.length or string[0...prefix.length] != prefix
       throw "Bad Search Path, prefix #{prefix} and string #{string}"
     elsif string.length > prefix.length
@@ -113,21 +81,20 @@ class TrieNode
       end
       children[next_char].add_into_tree(string, &block)
     else #string and prefix are the same
-      block.call(self)
-      #return value is the node
+      word_present = true
+      @trie.word_nodes[prefix] = self
     end
   end
 
-  def find_parent(string)
-    if string.length > prefix.length or string != prefix[-string.length..-1]
-      throw "Bad Search Path, string #{string} is not a parent of #{prefix}"
-    else
-      node = self
-      string.length.times { node = node.parent }
-      return node
+  def all_prefixes
+    ancestors = Set.new()
+    head = parent
+    until head.parent.nil?
+      ancestors << head if head.word_present
+      head = head.parent
     end
+    ancestors
   end
-
 
   def to_s
     "prefix, [#{children}]"
