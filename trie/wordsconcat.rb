@@ -1,4 +1,5 @@
 require 'set'
+require 'byebug'
 
 class Trie
   attr_accessor :word_nodes, :root, :concatenated_words
@@ -16,10 +17,22 @@ class Trie
   def import_words(word_list)
     word_list.each { |word| add_word(word) unless word.empty? }
     puts "words imported"
+    puts @word_nodes.size
+    temp = @word_nodes.max_by {|k, v| k.length }
+    #puts temp[0]
+    #puts (@word_nodes.dup.delete_if {|k,v| k == temp[0] }).max_by {|k, v| k.length }[0]
   end
 
   def valid_word?(string)
     !!@word_nodes[string]
+  end
+
+  def find_nearest_node(string)
+    head = @root
+    string.chars do |c|
+      head = head.children[c] if head.children[c]
+    end
+    head
   end
 
   def find_concat_words
@@ -31,7 +44,8 @@ class Trie
   end
 
   def ancestors_of(string, node, queue)
-    node.all_prefixes.map do |ancestor_node|
+    target = find_nearest_node(string)
+    target.all_prefixes.each do |ancestor_node|
       rest = string[ancestor_node.prefix.length..-1]
       if rest.nil? or rest.empty? 
         next
@@ -94,7 +108,11 @@ class TrieNode
   end
 
   def to_s
-    "#{prefix}, #{children.size} children"
+    "#{prefix}, #{self.children.size} children"
+  end
+
+  def inspect
+    "{@prefix= #{@prefix}, @parent = #{@parent.prefix}, @trie = #{@trie.__id__}, @word_present = #{@word_present}}"
   end
 end
 
