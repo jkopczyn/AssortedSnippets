@@ -98,7 +98,7 @@ class TrieNode
   end
 end
 
-File.open("wordsforproblem.txt") do |file|
+File.open("shortwords.txt") do |file|
   trie = Trie.new
   trie.import_words(file.lazy.map(&:strip))
   trie.find_concat_words
