@@ -33,3 +33,19 @@ var ScientificCalculator = function() {
 };
 
 inherits(ScientificCalculator, Calculator);
+
+ScientificCalculator.prototype.sin = function(angle) {
+  return Math.sin(angle);
+};
+
+ScientificCalculator.prototype.cos = function(angle) {
+  return Math.cos(angle);
+};
+
+ScientificCalculator.prototype.tan = function(angle) {
+  return Math.tan(angle);
+};
+
+ScientificCalculator.prototype.log = function(n) {
+  return Math.log(n);
+};
