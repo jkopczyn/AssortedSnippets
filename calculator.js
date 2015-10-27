@@ -49,3 +49,22 @@ ScientificCalculator.prototype.tan = function(angle) {
 ScientificCalculator.prototype.log = function(n) {
   return Math.log(n);
 };
+
+
+var withExponents = function() {
+  this.pow = function(base, exponent) {
+    var accum = 1;
+    for(var i = 0; i < exponent; i++) {
+      accum = accum * base;
+    }
+    return accum;
+  };
+
+  this.multiplyExp = function(logForm1, logForm2) {
+    return this.pow.apply(this,logForm1) * this.pow.apply(this, logForm2);
+  }
+
+  this.divideExp = function(logForm1, logForm2) {
+    return this.pow.apply(this,logForm1) / this.pow.apply(this, logForm2);
+  }
+}
