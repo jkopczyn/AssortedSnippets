@@ -68,3 +68,17 @@ var withExponents = function() {
     return this.pow.apply(this,logForm1) / this.pow.apply(this, logForm2);
   }
 }
+
+var delay = function(time, object, method, args) {
+  //var onResolve = object[method].apply(object, args);
+  var promise = new Promise(function(resolve, reject){
+    setTimeout(function() {
+      if(object[method]) {
+        resolve(object[method].apply(object, args));
+      } else {
+        reject(new Error("method "+method+" not found"));
+      }
+    }, time);
+  });
+  return promise;
+};
