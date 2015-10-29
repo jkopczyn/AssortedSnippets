@@ -1,4 +1,3 @@
-
 var inherits = function(SubClass, SuperClass) {
   function Surrogate() {
     this.constructor = SubClass;
