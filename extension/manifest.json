@@ -1,0 +1,14 @@
+{
+  "manifest_version": 2,
+  "name": "WalkMe Detector",
+  "version": "0.1",
+
+  "browser_action": {
+    "default_icon": "bubblem.png",
+    "default_popup": "popup.html"
+  },
+
+  "permissions" : [
+    "activeTab"
+  ]
+}
