@@ -4,8 +4,13 @@ def answer(str_S):
     target = int(str_S)
     R = Recurrence()
     i = 1
-    highExp = R.logSearch(target)
-    return str(R.fineSearch(target, highExp))
+    highExp = R.logSearch(target,1)
+    ans = R.fineSearch(target, highExp, 1)
+    if ans:
+	return str(ans)
+    highExp = R.logSearch(target,0)
+    ans = R.fineSearch(target, highExp, 0)
+    return str(ans)
 
 #closed form?
 #a^n+b^n+n?
@@ -44,7 +49,7 @@ class Recurrence:
                         queue.append(m+1)
         return self.store[n]
     
-    def logSearch(self,target):
+    def logSearch(self,target, parity):
         if target <= 1:
             return 0
         elif target == 2:
@@ -52,27 +57,23 @@ class Recurrence:
         elif target <= 7:
             return 2
         exp = 2
-        while self.f(pow(2,exp)) < target:
+        while self.f(pow(2,exp)+parity%2) < target:
             exp += 1
         return exp
 
-    def fineSearch(self, target, exp):
+    def fineSearch(self, target, exp, parity):
         if target < 15:
             early = {1: 1, 2: 2, 3: 3, 7: 4, 4: 5, 13: 6, 6: 7}
             if target in early:
                 return early[target]
             else:
                 return None
-        oddSolution = None
-        evenSolution = None
+        solution = None
         print target, exp
-
-        lowBound  = pow(2, exp-2)-1
-        highBound = pow(2, exp  )+1
-        #search in odd first; if it's in odd, that's later
+        lowBound  = pow(2, exp-1)-2+parity%2
+        highBound = pow(2, exp  )+parity%2
         while highBound - 2 > lowBound:
-            diff = highBound - lowBound
-            trial = lowBound + diff/2
+            trial = lowBound + 2*int((highBound-lowBound)/4)
             if not trial % 2:
                 trial += 1
             print trial
@@ -83,27 +84,9 @@ class Recurrence:
             elif self.f(trial) == target:
                 while self.f(trial+2) == target:
                     trial = trial + 2
-                oddSolution = trial
+                solution = trial
                 break
-        #proceed to even
-        lowBound  = pow(2, exp-2)-2
-        highBound = pow(2, exp)+2
-        while highBound - 2 > lowBound:
-            diff = highBound - lowBound
-            trial = lowBound + diff/2
-            if trial % 2:
-                trial += 1
-            print trial
-            if self.f(trial) > target:
-                highBound = trial
-            elif self.f(trial) < target:
-                lowBound = trial
-            elif self.f(trial) == target:
-                while self.f(trial+2) == target:
-                    trial = trial + 2
-                evenSolution = trial
-                break
-        return max([oddSolution, evenSolution])
+        return solution
 
 print answer("7")
 print answer("100")
