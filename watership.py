@@ -1,5 +1,6 @@
 import copy
 import collections
+import fractions
 
 def answer(n):
     start = WarrenState(active={1:n})
@@ -98,3 +99,39 @@ class WarrenState():
         return ((frozenset(self.active.items()),
                 frozenset(self.inactive.items())), self.multiplicity)
 
+
+#so states should have parent lists, each with a number associated.
+#when everything with X+1 active groups is out of the queue, states with X
+#active groups can be calculated explicitly and X+1 groups wiped
+
+def tentative(n):
+    start = StateNode(active={1:n}, copies=1)
+    tiers = collections.defaultdict(list,[(n,start)])
+    queue = collections.deque(start)
+    size = n
+    while queue:
+        head = queue.popLeft()
+        if len(head.active) < size:
+            calcAndClean(tiers, size)
+            size = len(head.active)
+        if head in tiers[size]:
+            continue
+        for succ, val in head.successors():
+            extant = next(s for s in tiers[size-1] if s.warrens() ==
+                    succ.warrens()), None)
+            if extant:
+                extant.parents[head] = succ.parents[head]
+            else:
+                tiers[size-1].append(succ)
+                queue.append(succ)
+    calcAndClean(tiers, 0)
+    cases = sum([node.copies for node in tiers[0]])
+    total = sum([node.copies * max(node.inactive.keys()) for node in tiers[0]])
+    divideBy = fractions.gcd(cases, total)
+    return str(total/divideBy)+"/"+str(cases/divideBy)
+
+def calcAndClean(tiers, size):
+    #for node in tiers[size]:
+    #   calculate
+    #del tiers[size+1]
+    pass
