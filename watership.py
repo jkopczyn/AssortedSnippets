@@ -6,10 +6,29 @@ def answer(n):
     manageStates(start)
     pass
 
+def manageStates(initialState):
+    outcomes = collections.Count()
+    queue = collections.OrderedDict([initialState])
+    while queue:
+        head = queue.popitem(last=False)
+        state, multiplicity = head.freeze()
+        if state in outcomes:
+            outcomes[state] += multiplicity
+            #fuck this is where this logic breaks
+            continue
+        for successor in head.successors():
+            succState, copies = successor.freeze()
+            if succState in outcomes:
+                #fuck this is where this logic breaks
+        for nudger in head.active.keys():
+            for nudgee in (head.active.keys() + head.inactive.keys()):
+                if nudgee == nudger:
+                    pass
 #so it's the problem of largest connected component
-#unfortunately, this question is swamped by people 
-#asking for answers for this puzzle specifically
-#so looking for any approaches is difficult
+#unfortunately, searching for anything like this 
+#question is swamped by people asking for answers 
+#for this puzzle specifically, so looking for
+#fruitful potential approaches is difficult
 
 #one approach: sort rabbits/nodes into unwarrened,
 #has-nudged, and warrened-but-has-not-nudged
@@ -79,41 +98,3 @@ class WarrenState():
         return ((frozenset(self.active.items()),
                 frozenset(self.inactive.items())), self.multiplicity)
 
-    def merge(self, nudger, nudgee):
-        if not nudger in self.active or self.active[nudger] == 0:
-            raise ArgumentError
-        newState = copy.deepcopy(self)
-        possiblePaths = self.active[nudgee]*self.active[nudger]*nudgee
-        newWarren = nudger + nudgee
-        
-        if nudger == nudgee:
-            #needs to handle distinct groups of the same size 
-            possiblePaths = self.active[nudger]*(nudger-1)
-            newState.inactive.setdefault(nudger, 0)
-            newState.inactive[nudger] += 1
-        elif nudgee in active:
-            newState.active.setdefault(newWarren, 0)
-            newState.active[newWarren] += 1
-            newState.active[nudgee] -= 1
-        else:
-            newState.inactive.setdefault(newWarren, 0)
-            newState.inactive[newWarren] += 1
-            newState.inactive[nudgee] -= 1
-        newState.active[nudger] -= 1
-        newState.multiplicity *= possiblePaths
-        deadKeys = [k for k in newState.active.keys() if newState.active[k] <= 0]
-	for deadKey in deadKeys:
-            del newState.active[deadKey]
-        deadKeys = [k for k in newState.inactive.keys() if newState.inactive[k] <= 0]
-	for deadKey in deadKeys:
-            del newState.inactive[deadKey]
-        return newState
-
-def manageStates(initialState):
-    queue = collections.OrderedDict([initialState])
-    while queue:
-        head = queue.pop(last=False)
-        for nudger in head.active.keys():
-            for nudgee in (head.active.keys() + head.inactive.keys()):
-                if nudgee == nudger:
-                    pass
