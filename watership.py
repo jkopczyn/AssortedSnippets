@@ -7,24 +7,6 @@ def answer(n):
     manageStates(start)
     pass
 
-def manageStates(initialState):
-    outcomes = collections.Count()
-    queue = collections.OrderedDict([initialState])
-    while queue:
-        head = queue.popitem(last=False)
-        state, multiplicity = head.freeze()
-        if state in outcomes:
-            outcomes[state] += multiplicity
-            #fuck this is where this logic breaks
-            continue
-        for successor in head.successors():
-            succState, copies = successor.freeze()
-            if succState in outcomes:
-                #fuck this is where this logic breaks
-        for nudger in head.active.keys():
-            for nudgee in (head.active.keys() + head.inactive.keys()):
-                if nudgee == nudger:
-                    pass
 #so it's the problem of largest connected component
 #unfortunately, searching for anything like this 
 #question is swamped by people asking for answers 
@@ -117,8 +99,8 @@ def tentative(n):
         if head in tiers[size]:
             continue
         for succ, val in head.successors():
-            extant = next(s for s in tiers[size-1] if s.warrens() ==
-                    succ.warrens()), None)
+            extant = next(i for i, s in enumerate(tiers[size-1]) if s.warrens() ==
+                    succ.warrens(), None)
             if extant:
                 extant.parents[head] = succ.parents[head]
             else:
@@ -131,7 +113,29 @@ def tentative(n):
     return str(total/divideBy)+"/"+str(cases/divideBy)
 
 def calcAndClean(tiers, size):
-    #for node in tiers[size]:
-    #   calculate
-    #del tiers[size+1]
-    pass
+    for node in tiers[size]:
+       node.copies = sum(parent.copies * multiple for parent, multiple in node.parents())
+    del tiers[size+1]
+
+#things I need: parents (hash from Node to multiplicity), successors (list), copies (starts as None)
+#StateNodes need to be hashable; active and inactive should be sufficient for
+#this purpose
+
+class StateNode:
+    def __init__(self, active=(), inactive=(), parents={}, copies=None):
+        self.active = dict(active)
+        self.inactive = dict(inactive)
+        self.parents = parents
+        self.copies = copies
+    
+    def warrens(self):
+        return (tuple(self.active.items()), tuple(self.inactive.items()))
+
+    def __hash__(self):
+        return hash(self.warrens())
+
+    def __eq__(self, other):
+        return self.warrens() == other.warrens()
+
+    def successors(self):
+        raise IHaveNoIdeaWhatImDoingException
