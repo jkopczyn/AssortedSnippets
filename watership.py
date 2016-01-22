@@ -24,10 +24,11 @@ import fractions
 def answer(n):
     start = StateNode(active={1:n}, copies=1)
     tiers = collections.defaultdict(list)
-    queue = collections.deque()
+    allSeen = set([start])
+    queue = collections.deque([start])
     tiers[n].append(start)
-    queue.append(start)
     size = n
+    #import pdb; pdb.set_trace()
     while len(queue) > 0:
         head = queue.popleft()
         #print '\n\nhead:', head.active, head.inactive, 'copies:', head.copies
@@ -37,20 +38,15 @@ def answer(n):
             #print 'size drop from', size, 'to', sum(head.active.values()), head.active
             size = sum(head.active.values())
         for succ, val in head.successors():
-            extant = next((i for i, s in enumerate(tiers[size-1]) if s.warrens() == succ), None)
-            #print 'extant?', extant, succ, val
-            if extant:
-                extant.parents[head.warrens()] = val
+            succ.parents[head] = val
+            if succ in allSeen:
+                tiers[size-1][(tiers[size-1].index(succ))].parents[head] = val
             else:
-                succNode = StateNode(*succ, parents={head.warrens(): val} )
-                if succNode in tiers[size-1]:
-                    #print 'already here', succNode, succ, tiers[size-1]
-                    continue
-                tiers[size-1].append(succNode)
-                queue.append(succNode)
+                tiers[size-1].append(succ)
+                queue.append(succ)
+                allSeen.add(succ)
     calcAndClean(tiers, 0)
     #print "final tiers:", tiers
-    #import pdb; pdb.set_trace()
     return renderOutput(tiers[0])
 
 def renderOutput(nodes):
@@ -65,11 +61,11 @@ def calcAndClean(tiers, size):
     #print 'calcAndClean', tiers, size
     if not tiers[size+1]:
         return
-    parentHash = dict((parent.warrens(), parent) for parent in tiers[size+1])
+    parentHash = set(parent for parent in tiers[size+1])
     #import pdb; pdb.set_trace()
     for node in tiers[size]:
-        #print 'calcNode', node.warrens(), node.parents
-        node.copies = sum(parentHash[parent].copies * multiple for parent, multiple in node.parents.items())
+        #print 'calcNode', node, node.parents
+        node.copies = sum(parent.copies * multiple for parent, multiple in node.parents.items())
     tiers.pop(size+1, None)
 
 #things I need: parents (hash from Node to multiplicity), successors (list), copies (starts as None)
@@ -85,6 +81,13 @@ class StateNode:
 
     def warrens(self):
         return (tuple(self.active.items()), tuple(self.inactive.items()))
+
+    def __copy__(self):
+        return StateNode(self.active, self.inactive, self.copies, dict(self.parents))
+
+    def __repr__(self):
+        return "".join(str(el) for el in ("active: ",self.active," inactive: ",
+            self.inactive," copies: ",self.copies," parents: ",self.parents))
 
     def __hash__(self):
         return hash(self.warrens())
@@ -128,8 +131,8 @@ class StateNode:
 
     @classmethod
     def addPrepped(cls, stateList, activeHash, inactiveHash, multiplicity):
-        stateList.append(((activeHash.items(), inactiveHash.items()), multiplicity))
-        return
+        stateList.append((StateNode(active=activeHash, inactive=inactiveHash), multiplicity))
+        return stateList
 
 def removeZeroes(dictionary):
     for key in [k for k in dictionary.keys() if dictionary[k] == 0]:
