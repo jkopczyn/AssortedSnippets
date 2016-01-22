@@ -2,11 +2,6 @@ import copy
 import collections
 import fractions
 
-def answer(n):
-    start = WarrenState(active={1:n})
-    manageStates(start)
-    pass
-
 #so it's the problem of largest connected component
 #unfortunately, searching for anything like this 
 #question is swamped by people asking for answers 
@@ -26,49 +21,56 @@ def answer(n):
 #when everything with X+1 active groups is out of the queue, states with X
 #active groups can be calculated explicitly and X+1 groups wiped
 
-def tentative(n):
+def answer(n):
     start = StateNode(active={1:n}, copies=1)
-    tiers = collections.defaultdict(list,[])
-    queue = collections.deque([start])
+    tiers = collections.defaultdict(list)
+    queue = collections.deque()
+    tiers[n].append(start)
+    queue.append(start)
     size = n
     while len(queue) > 0:
         head = queue.popleft()
-        print '\n\nhead:', head.active, head.inactive, 'copies:', head.copies
-        print "headSize:", sum(head.active.values()), "size:", size, '\n\n'
+        #print '\n\nhead:', head.active, head.inactive, 'copies:', head.copies
+        #print "headSize:", sum(head.active.values()), "size:", size, '\n\n'
         if sum(head.active.values()) < size:
-            calcAndClean(tiers, size)
-            print 'size drop from', size, 'to', sum(head.active.values()), head.active
+            calcAndClean(tiers, size-1)
+            #print 'size drop from', size, 'to', sum(head.active.values()), head.active
             size = sum(head.active.values())
         for succ, val in head.successors():
             extant = next((i for i, s in enumerate(tiers[size-1]) if s.warrens() == succ), None)
-            print 'extant?', extant, succ
+            #print 'extant?', extant, succ, val
             if extant:
                 extant.parents[head.warrens()] = val
             else:
                 succNode = StateNode(*succ, parents={head.warrens(): val} )
                 if succNode in tiers[size-1]:
-                    print 'already here', succNode, succ, tiers[size-1]
+                    #print 'already here', succNode, succ, tiers[size-1]
                     continue
                 tiers[size-1].append(succNode)
                 queue.append(succNode)
     calcAndClean(tiers, 0)
-    print "final tiers:", tiers
+    #print "final tiers:", tiers
+    #import pdb; pdb.set_trace()
     return renderOutput(tiers[0])
 
 def renderOutput(nodes):
-    print "nodes:", nodes
+    #print "nodes:", nodes
     cases = sum([node.copies for node in nodes])
     total = sum([node.copies * max(node.inactive.keys()) for node in nodes])
     divideBy = fractions.gcd(cases, total)
-    print total, cases, divideBy
+    #print total, cases, divideBy
     return str(total/divideBy)+"/"+str(cases/divideBy)
 
 def calcAndClean(tiers, size):
-    print 'calcAndClean', tiers, size
+    #print 'calcAndClean', tiers, size
+    if not tiers[size+1]:
+        return
+    parentHash = dict((parent.warrens(), parent) for parent in tiers[size+1])
+    #import pdb; pdb.set_trace()
     for node in tiers[size]:
-        print 'calcNode', node.warrens(), node.parents
-        node.copies = sum(parent.copies * multiple for parent, multiple in node.parents.items())
-    #tiers.pop(size+1, None)
+        #print 'calcNode', node.warrens(), node.parents
+        node.copies = sum(parentHash[parent].copies * multiple for parent, multiple in node.parents.items())
+    tiers.pop(size+1, None)
 
 #things I need: parents (hash from Node to multiplicity), successors (list), copies (starts as None)
 #StateNodes need to be hashable; active and inactive should be sufficient for
@@ -110,8 +112,10 @@ class StateNode:
                 newActive[size] -= 1
                 newActive[secondSize] -= 1
                 newActive[size + secondSize] += 1
-                StateNode.addPrepped(newStates, newActive, self.inactive, 
-                    secondSize * self.active[secondSize] * self.active[size])
+                permutations = self.active[secondSize] * self.active[size]
+                if size == secondSize:
+                    permutations -= self.active[size]
+                StateNode.addPrepped(newStates, newActive, self.inactive, secondSize * permutations)
             for secondSize in inactiveSizes:
                 newActive = copy.deepcopy(self.active)
                 newInactive = copy.deepcopy(self.inactive)
@@ -131,4 +135,14 @@ def removeZeroes(dictionary):
     for key in [k for k in dictionary.keys() if dictionary[k] == 0]:
         del dictionary[key]
 
-print tentative(2)
+print answer(2)
+print answer(3)
+print answer(4)
+print answer(5)
+print answer(6)
+print answer(7)
+print answer(8)
+print answer(9)
+print answer(10)
+print answer(11)
+print answer(12)

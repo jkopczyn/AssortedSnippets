@@ -1,2 +1,6 @@
 trie/wordsforproblem.txt
 trie/TrieChallenge.pdf
+stacked.*
+*.pyc
+*.*~
+.byebug_history
